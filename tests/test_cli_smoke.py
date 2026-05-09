@@ -39,6 +39,32 @@ def test_help_lists_subcommands() -> None:
     assert "analyze" in out
     assert "list" in out
     assert "version" in out
+    assert "fix" in out
+
+
+def test_fix_skips_when_too_few_sessions(tmp_path: Path) -> None:
+    """Regression: the safety floor must hold from the CLI too."""
+    proj_dir = tmp_path / "projects" / "-home-me-myrepo"
+    proj_dir.mkdir(parents=True)
+    (proj_dir / "s.jsonl").write_text(
+        json.dumps(
+            {
+                "type": "assistant",
+                "message": {
+                    "role": "assistant",
+                    "model": "claude-sonnet-4-6",
+                    "content": [{"type": "text", "text": "hi"}],
+                    "usage": {"input_tokens": 5, "output_tokens": 2},
+                },
+            }
+        )
+        + "\n"
+    )
+    env = {"CLAUDE_HOME": str(tmp_path), "PATH": "/usr/bin:/bin"}
+    r = _run(["fix"], env=env)
+    assert r.returncode == 0, r.stderr
+    assert "Skipped" in r.stdout
+    assert "5 sessions" in r.stdout
 
 
 def test_analyze_with_no_sessions_exits_nonzero(tmp_path: Path) -> None:

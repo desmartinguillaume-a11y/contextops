@@ -10,6 +10,14 @@ from rich.console import Console
 
 from . import __version__
 from .auditors import all_auditors
+from .fix import (
+    DEFAULT_MIN_SESSIONS,
+    DEFAULT_THRESHOLD,
+    apply_patch,
+    build_settings_patch,
+    compute_mcp_fix,
+    latest_project_slug,
+)
 from .pricing import Pricing
 from .report import compute_bill, render_report, render_session_list
 from .session import (
@@ -112,6 +120,118 @@ def list_sessions(
             }
         )
     render_session_list(rows, console=console)
+
+
+@app.command()
+def fix(
+    project: str | None = typer.Option(
+        None,
+        "--project",
+        "-p",
+        help="Project slug or substring. Defaults to the most recent project.",
+    ),
+    cwd: Path | None = typer.Option(
+        None,
+        "--cwd",
+        help="Project directory to patch. Defaults to the cwd recorded in the session.",
+    ),
+    min_sessions: int = typer.Option(
+        DEFAULT_MIN_SESSIONS,
+        "--min-sessions",
+        help="Refuse to recommend disabling a server unless it appeared in ≥N sessions.",
+    ),
+    threshold: float = typer.Option(
+        DEFAULT_THRESHOLD,
+        "--threshold",
+        help="Fraction of those sessions where the server must be unused (0.0–1.0).",
+    ),
+    apply: bool = typer.Option(
+        False,
+        "--apply/--no-apply",
+        help="Write the patch to disk. Default: print the diff only.",
+    ),
+) -> None:
+    """Propose safe configuration patches based on multi-session evidence.
+
+    Currently disables MCP servers that are exposed but never invoked across
+    the last N sessions of a project. By default prints a unified diff;
+    pass --apply to write .claude/settings.local.json.
+    """
+    if project:
+        match = find_project(project)
+        if not match:
+            console.print(f"[red]No project found matching '{project}'.[/red]")
+            raise typer.Exit(code=2)
+        project_slug = match.parent.name
+        recorded_cwd = load_session(match).cwd
+    else:
+        project_slug = latest_project_slug()
+        if not project_slug:
+            console.print(
+                "[red]No Claude Code sessions found under ~/.claude/projects/.[/red]"
+            )
+            raise typer.Exit(code=2)
+        latest = latest_session()
+        recorded_cwd = load_session(latest).cwd if latest else None
+
+    plan = compute_mcp_fix(
+        project_slug, min_sessions=min_sessions, threshold=threshold
+    )
+
+    console.print(
+        f"[dim]Project:[/dim] [cyan]{humanize_project_slug(project_slug)}[/cyan]  "
+        f"[dim]Sessions inspected:[/dim] {len(plan.sessions_inspected)}"
+    )
+
+    if plan.skipped_reason:
+        console.print(f"[yellow]Skipped:[/yellow] {plan.skipped_reason}")
+        console.print(
+            "[dim]Run more sessions in this project, or lower --min-sessions "
+            "if you understand the risk.[/dim]"
+        )
+        return
+
+    if plan.evidence:
+        rows = []
+        for ev in plan.evidence:
+            mark = "→" if ev.server in plan.servers_to_disable else " "
+            rows.append(
+                f"  {mark} {ev.server:<24} unused in "
+                f"{ev.unused_in}/{ev.defined_in} sessions "
+                f"({ev.unused_ratio:.0%})"
+            )
+        console.print("\n".join(rows))
+
+    if not plan.has_action:
+        console.print("[green]Nothing to fix — no MCP server qualifies.[/green]")
+        return
+
+    target_cwd = cwd or (Path(recorded_cwd) if recorded_cwd else None)
+    if target_cwd is None:
+        console.print(
+            "[yellow]Could not determine project cwd from session; "
+            "pass --cwd PATH to write a patch.[/yellow]"
+        )
+        return
+
+    patch = build_settings_patch(target_cwd, plan.servers_to_disable)
+    diff = patch.unified_diff()
+    console.print(
+        f"\n[dim]Proposed patch for[/dim] [cyan]{patch.target}[/cyan]"
+        + ("  [dim](new file)[/dim]" if patch.created else "")
+    )
+    console.print(diff or "[dim](no diff — already disabled)[/dim]")
+
+    if apply:
+        if not diff:
+            console.print("[dim]Nothing to write.[/dim]")
+            return
+        apply_patch(patch)
+        console.print(f"[green]✓[/green] wrote {patch.target}")
+    else:
+        console.print(
+            "\n[dim]Run again with --apply to write the patch.[/dim]"
+        )
 
 
 @app.command()
