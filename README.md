@@ -204,7 +204,7 @@ The on-disk session format is documented in
 git clone https://github.com/desmartinguillaume-a11y/contextops
 cd contextops
 pip install -e ".[dev]"
-pytest
+python -m pytest
 ```
 
 The full testing strategy (unit, robustness, CLI smoke, performance,
