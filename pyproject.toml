@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "contextops"
+version = "0.1.0"
+description = "FinOps for Claude Code: audit your sessions and find wasted tokens."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+authors = [{ name = "ContextOps contributors" }]
+keywords = ["claude", "claude-code", "llm", "tokens", "finops", "cli"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "typer>=0.12",
+    "rich>=13.7",
+    "pydantic>=2.6",
+]
+
+[project.optional-dependencies]
+tokenizer = ["anthropic>=0.34"]
+dev = ["pytest>=8", "pytest-cov>=5"]
+
+[project.urls]
+Homepage = "https://github.com/desmartinguillaume-a11y/contextops"
+Repository = "https://github.com/desmartinguillaume-a11y/contextops"
+
+[project.scripts]
+contextops = "contextops.cli:app"
+
+[tool.setuptools.packages.find]
+include = ["contextops*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
