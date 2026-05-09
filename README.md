@@ -207,6 +207,10 @@ pip install -e ".[dev]"
 pytest
 ```
 
+The full testing strategy (unit, robustness, CLI smoke, performance,
+and a session-format inspector for verifying new platforms) is
+documented in [`docs/testing.md`](docs/testing.md).
+
 ## License
 
 [MIT](LICENSE). Contributions welcome.
