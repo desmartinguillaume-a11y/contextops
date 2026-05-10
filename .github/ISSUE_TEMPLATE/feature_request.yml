@@ -1,0 +1,51 @@
+name: Feature request
+description: Suggest a new auditor, fix recipe, or quality-of-life improvement.
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ContextOps is intentionally narrow: local-only, six auditors,
+        one safe `fix` command. Suggestions that fit that shape land
+        fast. Suggestions that pull the tool in another direction (web
+        UI, daemon, multi-user aggregation) usually go in the roadmap
+        rather than v0.1.x.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: |
+        Describe the situation, not the solution. "I have 30 sessions
+        a week and want to see waste trends over time" is more useful
+        than "add a chart."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: What output / command / flag would solve it?
+    validations:
+      required: false
+  - type: dropdown
+    id: category
+    attributes:
+      label: What kind of change is this?
+      options:
+        - New auditor (waste-detection heuristic)
+        - New fix recipe (auto-patch)
+        - Output / report rendering
+        - CLI ergonomics (flags, defaults)
+        - Performance
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Are there existing tools or workarounds you've tried?
+    validations:
+      required: false

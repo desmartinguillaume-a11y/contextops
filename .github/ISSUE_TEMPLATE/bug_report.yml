@@ -1,0 +1,71 @@
+name: Bug report
+description: ContextOps produced wrong output, crashed, or refused to run.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. The most useful bug
+        reports include:
+
+        - The exact command you ran.
+        - A small (redacted) JSONL excerpt that reproduces the issue,
+          if relevant. **Please redact paths, credentials, and prompt
+          content before pasting.**
+        - The output you got vs. the output you expected.
+  - type: input
+    id: command
+    attributes:
+      label: Command you ran
+      placeholder: contextops analyze --project myrepo
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: Output, traceback, or wrong number. Code blocks (```) help.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: ContextOps version
+      placeholder: "0.1.0"
+      description: "Run `contextops version` to find this."
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.11.7"
+      description: "Run `python --version`."
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "macOS 14.5 / Ubuntu 24.04 / Windows 11"
+    validations:
+      required: true
+  - type: textarea
+    id: jsonl
+    attributes:
+      label: Reproducing JSONL excerpt (optional, redacted)
+      description: |
+        If the bug depends on a specific session, paste a minimal
+        excerpt here. Redact paths, prompt content, and any sensitive
+        identifiers. ContextOps is a local tool; we never see your
+        sessions unless you paste them.
+      render: text
+    validations:
+      required: false
