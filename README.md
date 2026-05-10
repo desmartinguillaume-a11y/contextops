@@ -1,5 +1,10 @@
 # ContextOps
 
+[![CI](https://github.com/desmartinguillaume-a11y/contextops/actions/workflows/test.yml/badge.svg)](https://github.com/desmartinguillaume-a11y/contextops/actions/workflows/test.yml)
+[![PyPI](https://img.shields.io/pypi/v/contextops.svg)](https://pypi.org/project/contextops/)
+[![Python versions](https://img.shields.io/pypi/pyversions/contextops.svg)](https://pypi.org/project/contextops/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 > **Your Claude Code session is a cloud bill. Audit it.**
 
 ContextOps is a local CLI that audits Claude Code sessions and tells
