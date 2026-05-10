@@ -1,14 +1,31 @@
 # ContextOps
 
+[![CI](https://github.com/desmartinguillaume-a11y/contextops/actions/workflows/test.yml/badge.svg)](https://github.com/desmartinguillaume-a11y/contextops/actions/workflows/test.yml)
+[![PyPI](https://img.shields.io/pypi/v/contextops.svg)](https://pypi.org/project/contextops/)
+[![Python versions](https://img.shields.io/pypi/pyversions/contextops.svg)](https://pypi.org/project/contextops/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 > **Your Claude Code session is a cloud bill. Audit it.**
 
-ContextOps is a CLI that audits Claude Code sessions and tells you where your
-tokens went, in the vocabulary of FinOps. It reads the JSONL transcripts that
-Claude Code already writes to `~/.claude/projects/`, runs six heuristic
-auditors over them, and prints a cost-explorer-style report with concrete
-recommendations.
+ContextOps is a local CLI that audits Claude Code sessions and tells
+you where your tokens went, in the vocabulary of FinOps. It reads the
+JSONL transcripts that Claude Code already writes to
+`~/.claude/projects/`, runs six heuristic auditors with `contextops
+analyze`, and — when the evidence is overwhelming across many sessions
+— proposes a safe, reversible config patch with `contextops fix`.
 
 No proxy. No API keys. No model calls. Pure local file analysis.
+
+<!--
+  TODO before posting: replace this comment with the real Rich
+  screenshot from your own sessions.
+
+      ![ContextOps report](docs/screenshot.png)
+
+  Capture it from a session where the numbers look credible (not too
+  perfect). Keep the ASCII block below as a text mirror so the README
+  is greppable. See docs/hn_post.md for the pre-flight checklist.
+-->
 
 ```text
 ╭─────────────────────────── Context Utilization Report ───────────────────────────╮
@@ -49,9 +66,10 @@ No proxy. No API keys. No model calls. Pure local file analysis.
 │  → $0.01  You ran LS on /repo/src 3 times. The directory rarely changes.         │
 │                                                                                  │
 ╰──────────────────────────────────────────────────────────────────────────────────╯
-
-Estimated savings if all recommendations applied: $2.27 (92% of bill).
 ```
+
+Estimated savings: 30–60% on typical sessions; this example shows $2.27.
+ContextOps undercounts on purpose; see "How accurate are the numbers?" below.
 
 ## FinOps for context windows
 
@@ -72,9 +90,10 @@ and it deserves the same vocabulary.
 ## Quickstart
 
 ```bash
-pip install contextops          # or: pip install -e . from a clone
+pip install git+https://github.com/desmartinguillaume-a11y/contextops
 contextops analyze              # audits the most recent Claude Code session
 contextops list                 # show recent sessions with their totals
+contextops fix                  # propose safe config patches (multi-session)
 ```
 
 By default ContextOps walks `~/.claude/projects/` to find sessions. Override
@@ -84,6 +103,21 @@ with `$CLAUDE_HOME` or pass an explicit path:
 contextops analyze --project my-repo
 contextops analyze ~/.claude/projects/-home-me-myrepo/abc123.jsonl
 ```
+
+## The two commands
+
+### `contextops analyze`
+
+Audits a single session and prints the cost-explorer-style report
+above. Reads only the JSONL on disk; the network is never touched.
+
+### `contextops fix`
+
+Aggregates evidence across **all sessions for a project** and proposes
+a safe, reversible patch to `.claude/settings.local.json`. Defaults to
+a dry-run diff; pass `--apply` to write. Details and conservative
+thresholds documented in
+[Auto-fix (`contextops fix`)](#auto-fix-contextops-fix) below.
 
 ## The six auditors
 
@@ -150,6 +184,30 @@ Both are billed.
 > wasted). Have Claude inspect the environment (e.g. `which python`)
 > before retrying.*
 
+## Auto-fix (`contextops fix`)
+
+`analyze` tells you what's wasteful. `fix` proposes a concrete patch — but
+only when the evidence is overwhelming. A single session is a snapshot
+("today I'm refactoring locally") and is a bad signal for "disable this
+MCP server forever". So `fix` aggregates **across sessions** for the same
+project:
+
+- a server is flagged only if it was *exposed* in at least
+  `--min-sessions` (default `5`) sessions, **and**
+- it was *unused* in at least `--threshold` (default `0.8`) of them.
+
+Below those thresholds, `fix` stays silent rather than risk a false
+positive. The patch is a unified diff against the project's
+`.claude/settings.local.json` (per-project, reversible). Pass `--apply`
+to write it.
+
+```bash
+contextops fix                                   # diff for the latest project
+contextops fix -p myrepo                         # target a specific project
+contextops fix --min-sessions 10 --threshold 0.9 # be even more conservative
+contextops fix --apply                           # actually write the file
+```
+
 ## How accurate are the numbers?
 
 ContextOps is built to **undercount, not overcount**. Heuristics that can't
@@ -188,8 +246,8 @@ The on-disk session format is documented in
 
 ## Roadmap
 
-- **Auto-fix mode** — propose CLAUDE.md trims, generate per-project MCP
-  enablement diffs.
+- **CLAUDE.md auto-trim** — propose section-level trims based on
+  multi-session reference patterns.
 - **Anomaly detection** — flag context-length spikes and per-turn cost
   outliers across a session.
 - **Showback view** — aggregate spend across all your projects, with
