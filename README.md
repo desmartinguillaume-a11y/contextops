@@ -244,6 +244,30 @@ inflation.
 The on-disk session format is documented in
 [`docs/session_format.md`](docs/session_format.md).
 
+## Auto-fix (`contextops fix`)
+
+`analyze` tells you what's wasteful. `fix` proposes a concrete patch — but
+only when the evidence is overwhelming. A single session is a snapshot
+("today I'm refactoring locally") and is a bad signal for "disable this
+MCP server forever". So `fix` aggregates **across sessions** for the same
+project:
+
+- a server is flagged only if it was *exposed* in at least
+  `--min-sessions` (default `5`) sessions, **and**
+- it was *unused* in at least `--threshold` (default `0.8`) of them.
+
+Below those thresholds, `fix` stays silent rather than risk a false
+positive. The patch is a unified diff against the project's
+`.claude/settings.local.json` (per-project, reversible). Pass `--apply`
+to write it.
+
+```bash
+contextops fix                                   # diff for the latest project
+contextops fix -p myrepo                         # target a specific project
+contextops fix --min-sessions 10 --threshold 0.9 # be even more conservative
+contextops fix --apply                           # actually write the file
+```
+
 ## Roadmap
 
 - **CLAUDE.md auto-trim** — propose section-level trims based on
