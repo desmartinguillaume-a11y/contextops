@@ -50,7 +50,8 @@ No proxy. No API keys. No model calls. Pure local file analysis.
 │                                                                                  │
 ╰──────────────────────────────────────────────────────────────────────────────────╯
 
-Estimated savings if all recommendations applied: $2.27 (92% of bill).
+Estimated savings: 30–60% on typical sessions; this example shows $2.27.
+ContextOps undercounts on purpose; see "How accurate are the numbers?" below.
 ```
 
 ## FinOps for context windows
