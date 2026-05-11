@@ -30,6 +30,7 @@ class Finding:
     recommendation: str
     methodology: str        # one-line "how we detected this", for transparency
     evidence: list[str] = field(default_factory=list)
+    fix_hint: str | None = None
 
 
 @runtime_checkable
@@ -53,6 +54,10 @@ def all_auditors() -> list[Auditor]:
     from .unused_mcp_tools import UnusedMcpTools
     from .redundant_exploration import RedundantExploration
     from .failed_then_retried import FailedThenRetried
+    from .oversized_tool_outputs import OversizedToolOutputs
+    from .duplicate_bash_runs import DuplicateBashRuns
+    from .large_image_uploads import LargeImageUploads
+    from .prompt_context_stuffing import PromptContextStuffing
 
     return [
         RepeatedFileReads(),
@@ -61,4 +66,8 @@ def all_auditors() -> list[Auditor]:
         UnusedMcpTools(),
         RedundantExploration(),
         FailedThenRetried(),
+        OversizedToolOutputs(),
+        DuplicateBashRuns(),
+        LargeImageUploads(),
+        PromptContextStuffing(),
     ]
